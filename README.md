@@ -1,3 +1,3 @@
 # machine-learning  
 
-Machine-Learning algorithm python realization
+Machine-Learning algorithm python implementation
