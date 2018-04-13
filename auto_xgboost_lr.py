@@ -394,7 +394,7 @@ cutoff_plot(df_train[region_0]['type'], y_preds)
 """
 
 def region_stacking(model_xgb, model_lr, leaves_feature, df, region_cal, 
-                    region_stack = ['fj', 'sd', 'zj'], f_target = 'type', weighted = False, r_w = 10):    
+                    region_stack = ['fj', 'sd', 'zj'], f_target = 'type', weighted = False, r_w = 0.8):    
     y_preds = {}
     for i in region_stack:
         y_preds[i] = predict(model_xgb[i], model_lr[i], leaves_feature[i], df[region_cal])
@@ -409,7 +409,7 @@ def region_stacking(model_xgb, model_lr, leaves_feature, df, region_cal,
         n = len(df_train.keys())
         w_0 = []
         for i in range(0,n):
-            w_0.append(1)
+            w_0.append((1-r_w)/(n-1))
         w_0 = np.array(w_0)
         w_0[region_stack.index(region_cal)] = r_w
         w = w_0/sum(w_0)
@@ -421,10 +421,10 @@ def region_stacking(model_xgb, model_lr, leaves_feature, df, region_cal,
     
     return res
 
-# region_stacking(xgb_model, lr_model, train_new_feature, df_train, 'zj', weighted = 'region_weight', r_w = 10) 
+# region_stacking(xgb_model, lr_model, train_new_feature, df_train, 'zj', weighted = 'region_weight', r_w = 0.8) 
 
 def region_stacking_predict(model_xgb, model_lr, leaves_feature, predict_data, region_cal, 
-                    region_stack = ['fj', 'sd', 'zj'], f_target = 'type', weighted = False, r_w = 10):    
+                    region_stack = ['fj', 'sd', 'zj'], f_target = 'type', weighted = False, r_w = 0.8):    
     y_preds = {}
     for i in region_stack:
         y_preds[i] = predict(model_xgb[i], model_lr[i], leaves_feature[i], predict_data)
@@ -439,9 +439,10 @@ def region_stacking_predict(model_xgb, model_lr, leaves_feature, predict_data, r
             w.append(w_sample[i])
         y_result = (pd.DataFrame(y_preds) * w).sum(axis = 1).values 
     elif weighted == 'region_weight':
+    	n = len(region_stack)
         w_0 = []
         for i in range(0,n):
-            w_0.append(1)
+            w_0.append((1-r_w)/(n-1))
         w_0 = np.array(w_0)
         w_0[region_stack.index(region_cal)] = r_w
         w = w_0/sum(w_0)
@@ -453,4 +454,4 @@ def region_stacking_predict(model_xgb, model_lr, leaves_feature, predict_data, r
     
     return res
 
-# region_stacking_predict(xgb_model, lr_model, train_new_feature, test, 'zj', weighted = 'region_weight', r_w = 10) 
+# region_stacking_predict(xgb_model, lr_model, train_new_feature, test, 'zj', weighted = 'region_weight', r_w = 0.8) 
