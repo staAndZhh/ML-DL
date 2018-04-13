@@ -8,7 +8,6 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.cross_validation import train_test_split
 from sklearn.linear_model import LogisticRegression
-import matplotlib.pyplot as plt
 
 def ignore_warn(*args, **kwargs):
     pass
@@ -26,9 +25,16 @@ def metrics_spec(actual_data, predict_data, cutoff=0.5):
     fpr = 1.0 * (bind_data[bind_data[:, 0] == 0][:, 1] >= cutoff).sum() / bind_data.shape[0]
     print("模型检出率:%.3f" % dr, "\t模型假阳性率:%.3f" % fpr, "\t模型阳性预测值:%.3f" % ppv)
 
-def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_seed = 1301, cv_fold = 5, para_unbalance = 1):
+def auto_xgboost_lr(df_train, f_target = 'type', scoring_grid = 'roc_auc', random_seed = 1301, cv_fold = 5, unbalance = True):
+    y = df_train[f_target]
+    X = df_train.drop(f_target, axis = 1, inplace = False)
     
-    X_train, X_test, Y_train, Y_test = cross_validation.train_test_split(df_train_X, df_train_y, random_state = random_seed, stratify = df_train_y, test_size = 0.4)
+    if unbalance == True:
+        ratio = y.sum()/y.shape[0]
+    else:
+        ratio = 1        
+    
+    X_train, X_test, Y_train, Y_test = cross_validation.train_test_split(X, y, random_state = random_seed, stratify = y, test_size = 0.4)
     param_test = {
         'learning_rate':[0.1, 0.05, 0.02, 0.01, 0.005],
     }
@@ -42,7 +48,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = 0.8,
             subsample = 0.8,
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = 0.01,
             seed=random_seed),
         param_grid=param_test,
@@ -66,7 +72,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = 0.8,
             subsample = 0.8,
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = 0.01,
             seed=random_seed),
         param_grid=param_test,
@@ -89,7 +95,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = 0.8,
             subsample = 0.8,
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = 0.01,
             seed=random_seed),
         param_grid=param_test,
@@ -101,7 +107,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
     print('n_estimators: ',gsearch1_0.best_params_['n_estimators'])
 
     param_test = {
-        'max_depth': list(range(3,10,1)),
+        'max_depth': list(range(3,9,1)),
         'min_child_weight': list(range(2,20,2))
     }
     gsearch2 = GridSearchCV(
@@ -114,7 +120,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = 0.8,
             subsample = 0.8,
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = 0.01,
             seed=random_seed),
         param_grid=param_test,
@@ -138,7 +144,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = 0.8,
             subsample = 0.8,
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = 0.01,
             seed=random_seed),
         param_grid=param_test,
@@ -163,7 +169,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = 0.8,
             subsample = 0.8,
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = 0.01,
             seed=random_seed),
         param_grid=param_test,
@@ -187,7 +193,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = 0.8,
             subsample = 0.8,
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = 0.01,
             seed=random_seed),
         param_grid=param_test,
@@ -211,7 +217,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = gsearch4_0.best_params_['colsample_bytree'],
             subsample = gsearch4_0.best_params_['subsample'],
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = 0.01,
             seed=random_seed),
         param_grid=param_test,
@@ -231,7 +237,7 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
             colsample_bytree = gsearch4_0.best_params_['colsample_bytree'],
             subsample = gsearch4_0.best_params_['subsample'],
             objective='binary:logistic',
-            scale_pos_weight = para_unbalance,
+            scale_pos_weight = 1/ratio,
             reg_alpha = gsearch5.best_params_['reg_alpha'],
             seed=random_seed
     )
@@ -309,27 +315,24 @@ def auto_xgboost_lr(df_train_X, df_train_y, scoring_grid = 'roc_auc', random_see
     print('xgboost+lr模型效果:预测集')
     metrics_spec(Y_test, y_test_lr)
     
-    return model_xgb, model_lr, y_train_lr, y_test_lr
+    return model_xgb, model_lr, train_new_feature, y_train_lr, y_test_lr
 
     #res_data.to_csv('编码原始数据集.csv', encoding = 'utf-8')
 
-
-def predict(model_xgb, model_lr, X_train, data_predict, target_feature = 'type'):
+def predict(model_xgb, model_lr, leaves_feature, data_predict, target_feature = 'type'):
     
     y = data_predict[target_feature]
     X = data_predict.drop(target_feature, axis = 1, inplace = False)
-    
-    train_new_feature = model_xgb.apply(X_train)
     predict_new_feature = model_xgb.apply(X)
-
-    enc = OneHotEncoder()
-    enc.fit(train_new_feature)
-    train_new_feature2 = np.array(enc.transform(train_new_feature).toarray())
-    predict_new_feature2 = np.array(enc.transform(predict_new_feature).toarray())
+    xgbenc = OneHotEncoder()
+    xgbenc.fit(leaves_feature)
+    train_new_feature2 = np.array(xgbenc.transform(leaves_feature).toarray())
+    predict_new_feature2 = np.array(xgbenc.transform(predict_new_feature).toarray())
     y_pred = model_lr.predict_proba(predict_new_feature2)[:, 1]
    
     return y_pred
 
+import matplotlib.pyplot as plt
 
 def cutoff_plot(y_actual, y_pred, col = 'b-'):
     
@@ -366,15 +369,88 @@ def cutoff_plot(y_actual, y_pred, col = 'b-'):
     
     return res   
 
-# implementation demo 1
 """
-y = train_fj['type']
-X = train_fj.drop('type', axis = 1, inplace = False)
-ratio = y.sum()/y.shape[0]
+df_train = {
+    'fj': train_fj,
+    'sd': train_sd,
+    'zj': train_zj
+}
 
-(xgb_model, lr_model, y_train_pred, y_test_pred) = auto_xgboost_lr(X, y, 'f1_weighted', para_unbalance = 1/ratio)
-y_preds = predict(xgb_model, lr_model, X, train_fj)
-metrics_spec(train_sd['type'], y_preds)
-cutoff_plot(train_sd['type'], y_preds)
+xgb_model = {}
+lr_model ={}
+train_new_feature = {}
+y_train_pred = {}
+y_test_pred = {}
+
+for region in ['fj', 'sd', 'zj']:
+    (xgb_model[region], lr_model[region], train_new_feature[region], y_train_pred[region], y_test_pred[region]) = \
+        auto_xgboost_lr(df_train[region], scoring_grid = 'f1_weighted', unbalance = True)
+
+region_0 = 'sd'
+y_preds = predict(xgb_model[region_0], lr_model[region_0], train_new_feature[region_0], df_train[region_0])
+metrics_spec(df_train[region_0]['type'], y_preds)
+cutoff_plot(df_train[region_0]['type'], y_preds)
 
 """
+
+def region_stacking(model_xgb, model_lr, leaves_feature, df, region_cal, 
+                    region_stack = ['fj', 'sd', 'zj'], f_target = 'type', weighted = False, r_w = 10):    
+    y_preds = {}
+    for i in region_stack:
+        y_preds[i] = predict(model_xgb[i], model_lr[i], leaves_feature[i], df[region_cal])
+    if weighted == 'sample_weight':
+        n = len(df_train.keys())
+        w_0 = []
+        for i in range(0,n):
+            w_0.append(df[region_stack[i]].loc[df[region_stack[i]][f_target]==1,:].shape[0])
+        w = np.array(w_0)/sum(w_0)
+        y_result = (pd.DataFrame(y_preds) * w).sum(axis = 1).values 
+    elif weighted == 'region_weight':
+        n = len(df_train.keys())
+        w_0 = []
+        for i in range(0,n):
+            w_0.append(1)
+        w_0 = np.array(w_0)
+        w_0[region_stack.index(region_cal)] = r_w
+        w = w_0/sum(w_0)
+        y_result = (pd.DataFrame(y_preds) * w).sum(axis = 1).values 
+    else:
+        y_result = pd.DataFrame(y_preds).sum(axis =1).values
+    metrics_spec(df_train[region_cal][f_target], y_result)
+    res = cutoff_plot(df_train[region_cal][f_target], y_result)
+    
+    return res
+
+# region_stacking(xgb_model, lr_model, train_new_feature, df_train, 'zj', weighted = 'region_weight', r_w = 10) 
+
+def region_stacking_predict(model_xgb, model_lr, leaves_feature, predict_data, region_cal, 
+                    region_stack = ['fj', 'sd', 'zj'], f_target = 'type', weighted = False, r_w = 10):    
+    y_preds = {}
+    for i in region_stack:
+        y_preds[i] = predict(model_xgb[i], model_lr[i], leaves_feature[i], predict_data)
+    if weighted == 'sample_weight':
+        w_sample = {
+            'fj': 0.63098592,
+            'sd': 0.12394366,
+            'zj': 0.24507042
+        }
+        w = []
+        for i in region_stack:
+            w.append(w_sample[i])
+        y_result = (pd.DataFrame(y_preds) * w).sum(axis = 1).values 
+    elif weighted == 'region_weight':
+        w_0 = []
+        for i in range(0,n):
+            w_0.append(1)
+        w_0 = np.array(w_0)
+        w_0[region_stack.index(region_cal)] = r_w
+        w = w_0/sum(w_0)
+        y_result = (pd.DataFrame(y_preds) * w).sum(axis = 1).values 
+    else:
+        y_result = pd.DataFrame(y_preds).sum(axis =1).values
+    metrics_spec(predict_data[f_target], y_result)
+    res = cutoff_plot(predict_data[f_target], y_result)
+    
+    return res
+
+# region_stacking_predict(xgb_model, lr_model, train_new_feature, test, 'zj', weighted = 'region_weight', r_w = 10) 
